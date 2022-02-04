@@ -392,7 +392,7 @@ map_prob_sequential_NCS = function(tet,r0,a,ech,vector_rep,
   #time simulation
   time_processing = sapply(liste_sim_sequential,"[[",5)
   write.csv(time_processing,paste0(map_prob_graph,"/",csv_name,"_time_processing.csv"))
-  return(liste_sim_sequential)
+  return("FIN")
   
 }
 
@@ -706,7 +706,6 @@ sequential_hitting_boolean_sim_particle = function(tet,r0,a,ech,K){
   # for(t in 1:2){#test
     i=order_hitting[t]
     p_part = lapply(1:K,parallel_K)
-    # stopCluster(cl)
     idx = sapply(p_part, function(k){
       if(is.null(k)){return(0)}
       if(length(k)==0){return(0)}
@@ -732,11 +731,10 @@ sequential_hitting_boolean_sim_particle = function(tet,r0,a,ech,K){
 }
 
 sequential_hitting_boolean_sim_particle_2 = function(tet,r0,a,ech,K){
-  parallel_K = function(x,p){
+  parallel_K = function(x){
     N = rpois(1,tet*pi*(2/a^2)) #selon l'expression de la premiere partie
-    if(N == 0){
-      p_prop[[x]] = newParticule(data = NULL,id = x,idx = x,par = p[[x]])
-      return(p_prop[[x]])
+    if(N == 0){p[[x]] = newParticule(data = NULL,id = x,idx = x,par = p[[x]])
+      return(p[[x]])
     }
     # rayons des disques
     R = rgamma(N,3,a)
@@ -751,11 +749,11 @@ sequential_hitting_boolean_sim_particle_2 = function(tet,r0,a,ech,K){
     }
     x_proj = x_proj[test==0,,drop=F]
     if(length(x_proj)==0){
-      p_prop[[x]] = newParticule(data = NULL,id = x,idx = x,par = p[[x]])
-      return(p_prop[[x]])
+      p[[x]] = newParticule(data = NULL,id = x,idx = x,par = p[[x]])
+      return(p[[x]])
     }
-    for(j in 1:(dim(x_proj)[1])){p_prop[[x]] = newParticule(data = x_proj[j,],id = x,idx = x,par = p[[x]])}
-    return(p_prop[[x]])
+    for(j in 1:(dim(x_proj)[1])){p[[x]] = newParticule(data = x_proj[j,],id = x,idx = x,par = p[[x]])}
+    return(p[[x]])
   }
   ech_avoiding =  ech[ech[,3]==0,]
   # ech_hitting =  rec.list(K)
@@ -766,14 +764,14 @@ sequential_hitting_boolean_sim_particle_2 = function(tet,r0,a,ech,K){
   for(t in seq(order_hitting)){
   # for(t in 1:1){#test
     i=order_hitting[t]
-    p_part = lapply(1:K,parallel_K,p=p)
+    p_part = lapply(1:K,parallel_K)
     # stopCluster(cl)
     idx = sapply(1:K, function(k){
-      if(t == 1){
-        if(is.null(t(buildSimu(p_part[[k]])))){return(0)}
-        if(length(t(buildSimu(p_part[[k]])))==0){return(0)}
-        #k_test = t(buildSimu(p_part[[k]]))
-      }
+      # if(t == 1){
+      if(is.null(t(buildSimu(p_part[[k]])))){return(0)}
+      if(length(t(buildSimu(p_part[[k]])))==0){return(0)}
+      #   #k_test = t(buildSimu(p_part[[k]]))
+      # }
       #else if(is.null(p_part[[k]])| length(p_part[[k]])==0){k_test = t(buildSimu(p[[k]]))}
       #else{k_test = rbind(t(buildSimu(p[[k]])),t(buildSimu(p_part[[k]])))}
       k_test = t(buildSimu(p_part[[k]]))
@@ -799,7 +797,7 @@ sequential_hitting_boolean_sim_particle_2 = function(tet,r0,a,ech,K){
 
 sequential_simulation_particule = function(tet,r0,a,ech,K){
   avoiding = sequential_avoiding_boolean_sim(tet = tet,r0 = r0,a = a,ech = ech)
-  hitting = sequential_hitting_boolean_sim_particle(tet = tet,r0 = r0,a = a,ech = ech,K = K)
+  hitting = sequential_hitting_boolean_sim_particle_2(tet = tet,r0 = r0,a = a,ech = ech,K = K)
   
   return(list(avoiding,t(buildSimu(hitting[[sample(x = 1:K,size = 1)]]))))
   
