@@ -82,7 +82,7 @@ initialization = function(r0,rectangle_range,ech,set.seed){
   xcond = cbind(xcond,Rcond)
   # les disques générés
   return(xcond)
-}
+}###
 
 iterative_boolean_sim = function(tet,r0,a,ech,set.seed,init_matrix){
   #iteration number
