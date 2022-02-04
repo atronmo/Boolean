@@ -1,4 +1,4 @@
-#RUN KATRINA
+##RUN KATRINA
 #parameters
 source("thesis_boolean_model.R")
 tet = 10 #density Poisson point process
