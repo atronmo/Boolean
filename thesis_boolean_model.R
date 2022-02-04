@@ -61,7 +61,7 @@ initialization = function(r0,rectangle_range,ech,set.seed){
   n = dim(ech)[1]
   cond = rep(0,n) 
   Ncond = 0 # nombre d'objets
-  if(isTRUE(set.seed)){set.seed = set.seed}
+  if(!is.null(set.seed)){set.seed = set.seed}
   while(J>0){
     u=runif(1)
     Rtest = (u<cum_pi[1])*rexp(1,a)+(u>cum_pi[1] & u<cum_pi[2])*rgamma(1,2,a) + 
@@ -100,7 +100,7 @@ iterative_boolean_sim = function(tet,r0,a,ech,set.seed,init_matrix){
   n_obt_obt_limit = NULL
   tau = 9e10
   i=1
-  if(isTRUE(set.seed)){set.seed = set.seed}
+  if(!is.null(set.seed)){set.seed = set.seed}
   while(TRUE){
     #condition all initial object erased
     #if(y_cont[i]==0){break}

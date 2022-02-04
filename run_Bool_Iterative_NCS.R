@@ -31,7 +31,7 @@ qq_plot(tet=tet,r0=r0,a = a,radius = radius,csv_name = csv_name)
 plot_map_prob(csv_name = paste0(csv_name),rectangle_range)
 hist_ind_sim_iterative(tet = tet,r0 = r0,a = a,input_csv = paste0(csv_name))
 variogram_grid_boolean(csv_name,rectangle_range)
-plot_variogram_grid_boolean(a = a,tet=tet,vario_grid_list,csv_name = paste0(csv_name),rectangle_range)
+# plot_variogram_grid_boolean(a = a,tet=tet,vario_grid_list,csv_name = paste0(csv_name),rectangle_range)
 setwd("..")
 
 #ITERATIVE: NCS activated
@@ -48,6 +48,6 @@ qq_plot(tet=tet,r0=r0,a = a,radius = radius,csv_name = csv_name)
 plot_map_prob(csv_name = paste0(csv_name),rectangle_range)
 hist_ind_sim_iterative(tet = tet,r0 = r0,a = a,input_csv = paste0(csv_name))
 variogram_grid_boolean(csv_name,rectangle_range)
-plot_variogram_grid_boolean(a = a,tet=tet,vario_grid_list,csv_name = paste0(csv_name),rectangle_range)
+# plot_variogram_grid_boolean(a = a,tet=tet,vario_grid_list,csv_name = paste0(csv_name),rectangle_range)
 setwd("..")
 
