@@ -166,42 +166,21 @@ iterative_boolean_sim = function(tet,r0,a,ech,set.seed,init_matrix){
 sequential_avoiding_boolean_sim = function(tet,r0,a,ech){
   #avoiding functional
   p = newParticule(NULL)
-  N = rpois(1,tet*pi*(r0^2+2*r0/a+2/a^2)) #selon l'expression de la premiere partie
-  # rayons des disques
-  den = a^2*r0^2+2*a*r0+2 #denominateur des probabilité du melange de la distr. 
-  #gamma
-  p_i = c(a^2*r0^2,2*a*r0,2)/den # probas du mélange
-  cum_pi = cumsum(p_i) #distribution cumulée des probas du mélange
-  #pour générer les rayons
-  u=runif(N)
-  R = (u<cum_pi[1])*rgamma(N,1,a)+(u>cum_pi[1] & u<cum_pi[2])*rgamma(N,2,a) + 
-    (u>cum_pi[2])*rgamma(N,3,a)
-  # implantations	
-  al = 2*pi*runif(N) #angle en polaires
-  m = (R+r0)*sqrt(runif(N)) #rayon en polaires
-  x_proj = cbind((m)*cos(al),m*sin(al)) #projection aux axis cartesiennes
-  x_proj = cbind(x_proj,R)
-  test = as.matrix(sqrt(outer(ech[,1],x_proj[,1],"-")^2+outer(ech[,2],x_proj[,2],"-")^2))
-  test = sapply(1:N,function(i){
-    test1 = test[,i]<x_proj[i,3]
-    return(test1)
-  })
-  test = apply(as.matrix(test),2,sum)
-  
-  # test= numeric(N)
-  # for(j in seq(N)){
-  #   if(as.numeric(sum(sqrt((ech[,1]-x_proj[j,1])^2+(ech[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
-  # }
+  x_proj = NCS(tet = tet,a = a,r0 = r0)
+  test=numeric(dim(x_proj)[1])
+  for(j in 1:(dim(x_proj)[1])){
+    if(as.numeric(sum(sqrt((ech[,1]-x_proj[j,1])^2+(ech[,2]-x_proj[j,2])^2)<x_proj[j,3])>0)){test[j] = 1}
+  }
   x_proj = x_proj[test==0,,drop = F]
   if(length(x_proj) == 0){return(NULL)}
   for(j in 1:(dim(x_proj)[1])){p = newParticule(data = x_proj[j,],par = p)}
   return(p)
-  
 }
 
 
 sequential_hitting_boolean_sim_checking_background = function(tet,r0,a,ech,K,i,ech_avoiding,parallel = FALSE,ncores,particle = FALSE,p=NULL){
   creating_object = function(k,tet,t0,a,i,ech_avoiding,ech,particle,p){
+    set.seed(NULL)
     N = rpois(1,tet*pi*(2/a^2)) #selon l'expression de la premiere partie
     if(N == 0){
       if(particle == TRUE){return(p[[k]])}
@@ -214,23 +193,15 @@ sequential_hitting_boolean_sim_checking_background = function(tet,r0,a,ech,K,i,e
     m = R*sqrt(runif(N)) #rayon en polaires
     x_proj = cbind(m*cos(al)+ech[i,1],m*sin(al)+ech[i,2]) #projection aux axis cartesiennes
     x_proj = as.matrix(cbind(x_proj,R,k))
-    test = as.matrix(sqrt(outer(ech_avoiding[,1],x_proj[,1],"-")^2+outer(ech_avoiding[,2],x_proj[,2],"-")^2))
     
-    test = sapply(1:N,function(i){
-      test1 = test[,i]<x_proj[i,3]
-      return(test1)
-    })
-    test = apply(as.matrix(test),2,sum)
-    
-    # test= numeric(N)
-    # for(j in seq(N)){
-    #   if(as.numeric(sum(sqrt((ech_avoiding[,1]-x_proj[j,1])^2+(ech_avoiding[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
-    # }
-    x_proj = x_proj[test==0,,drop=F]
-    if(length(x_proj)==0){
-      if(particle == TRUE){return(p[[k]])}
-      else{return(NULL)}
+    test=numeric(dim(x_proj)[1])
+    for(j in 1:(dim(x_proj)[1])){
+      if(as.numeric(sum(sqrt((ech_avoiding[,1]-x_proj[j,1])^2+(ech_avoiding[,2]-x_proj[j,2])^2)<x_proj[j,3])>0)){test[j] = 1}
     }
+    x_proj = x_proj[test==0,,drop = F]
+    if(length(x_proj) == 0){
+      if(particle == TRUE){return(p[[k]])}
+      else{return(NULL)}}
     if(particle == TRUE){
       for(j in 1:(dim(x_proj)[1])){p[[k]] = newParticule(data = x_proj[j,],id = k,idx = k,par = p[[k]])}
       return(p[[k]])
@@ -282,12 +253,17 @@ sequential_hitting_boolean_sim = function(tet,r0,a,ech,K,parallel = FALSE){
     }
     idx = sapply(ech_hitting_list_prop, function(k){
       if((is.null(k) | length(k)==0) & t == 1){return(0)}
-      # test = sqrt(outer(k[,1],ech[i,1],"-")^2+outer(k[,2],ech[i,2],"-")^2)<k[,3]
-      test = as.matrix(sqrt(outer(ech[i,1],k[,1],"-")^2+outer(ech[i,2],k[,2],"-")^2))
-      #if foreground is overlapped 
-      test = sapply(1:(dim(test)[2]),function(j){return(test[,j]<k[j,3])})
-      #how many objects cover ci
-      test = apply(as.matrix(test),2,sum)
+      #traditional method
+      test = numeric(dim(ech[i,])[1]) #vector hit (which one hit the the objects from the 
+      #Non-conditional simulation)
+      for(j in 1:(dim(k)[1])){test = test + (sqrt((ech[i,1]-k[j,1])^2+(ech[i,2]-k[j,2])^2)<k[j,3])}
+      
+      #selon moi ça marche egalement
+      # test = as.matrix(sqrt(outer(ech[i,1],k[,1],"-")^2+outer(ech[i,2],k[,2],"-")^2))
+      # #if foreground is overlapped 
+      # test = sapply(1:(dim(test)[2]),function(j){return(test[,j]<k[j,3])})
+      # #how many objects cover ci
+      # test = apply(as.matrix(test),2,sum)
       
       #is this number greater than 1
       if(sum(test)>0){return(1)}
@@ -881,23 +857,6 @@ sequential_simulation_particule = function(tet,r0,a,ech,K){
 }
 #Faire N simulations non-conditionnelles
 NCS = function(tet,a,r0){
-  N = rpois(1,tet*pi*(r0^2+2*r0/a+2/a^2)) #selon l'expression de la premiere partie
-  den = a^2*r0^2+2*a*r0+2 #denominateur des probabilité du melange de la distr. 
-  p_i = c(a^2*r0^2,2*a*r0,2)/den # probas du mélange
-  cum_pi = cumsum(p_i) #distribution cumulée des probas du mélange
-  #pour générer les rayons
-  u=runif(N)
-  R = (u<cum_pi[1])*rgamma(N,1,a)+(u>cum_pi[1] & u<cum_pi[2])*rgamma(N,2,a) + 
-    (u>cum_pi[2])*rgamma(N,3,a)
-  # implantations	
-  al = 2*pi*runif(N) #angle en polaires
-  m = (R+r0)*sqrt(runif(N)) #rayon en polaires
-  x = cbind(m*cos(al),m*sin(al)) #projection aux axis cartesiennes
-  return(cbind(x,R))
-}
-
-#Check if the points are background or foreground from a set of points
-check_points_NCS = function(tet,a,r0,ech){
   set.seed(NULL)
   N = rpois(1,tet*pi*(r0^2+2*r0/a+2/a^2)) #selon l'expression de la premiere partie
   den = a^2*r0^2+2*a*r0+2 #denominateur des probabilité du melange de la distr. 
@@ -911,10 +870,17 @@ check_points_NCS = function(tet,a,r0,ech){
   al = 2*pi*runif(N) #angle en polaires
   m = (R+r0)*sqrt(runif(N)) #rayon en polaires
   x = cbind(m*cos(al),m*sin(al)) #projection aux axis cartesiennes
+  if(is.null(x)){return(NULL)}
+  return(cbind(x,R))
+}
+
+#Check if the points are background or foreground from a set of points
+check_points_NCS = function(tet,a,r0,ech){
+  x = NCS(tet = tet,a = a,r0 = r0)
   #it is foreground or background
   hit = rep(0,dim(ech)[1]) #vector hit (which one hit the the objects from the 
   #Non-conditional simulation)
-  for(i in 1:N){hit = hit + (sqrt((ech[,1]-x[i,1])^2+(ech[,2]-x[i,2])^2)<R[i])}
+  for(i in 1:(dim(x)[1])){hit = hit + (sqrt((ech[,1]-x[i,1])^2+(ech[,2]-x[i,2])^2)<x[i,3])}
   hit = as.numeric(hit>0)
   return(cbind(ech[,1:2],hit))
 }
@@ -924,34 +890,52 @@ CSV_compute_N_NCS = function(tet,r0,a,vector_rep,rectangle_range,csv_name){
   grid_total = expand.grid(x=seq(-rectangle_range[1]/2,rectangle_range[1]/2,length.out = 400),
                            y=seq(-rectangle_range[2]/2,rectangle_range[2]/2, length.out = 300))
   result_compute_N_NCS = compute_N_NCS(tet,a,r0,vector_rep)
+  gc()
   ncores = detectCores()-1
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
   grid_computed = mclapply(result_compute_N_NCS,mc.cores = ncores, function(liste){
+    #alternativa: demasiada RAM por gran matriz hit2
+    # hit2 = as.matrix(sqrt(outer(grid_total[,1],liste[,1],"-")^2+outer(grid_total[,2],liste[,2],"-")^2))
+    # hit2 = sapply(1:(dim(hit2)[2]),function(i){
+    #   test1 = hit2[,i]<liste[i,3]
+    #   return(test1)
+    # })
+    # hit2 = apply(as.matrix(hit2),1,sum)
+    # hit2 = as.numeric(hit2>0)
+    #optimizado: mucha ram igual
+    # hit2 = sapply(1:(dim(liste)[1]),function(i){
+    #   hit2 = sqrt(outer(grid_total[,1],liste[i,1],"-")^2+outer(grid_total[,2],liste[i,2],"-")^2)
+    #   hit2 = hit2[,1]<liste[i,3]
+    #   return(hit2)
+    # })
+    # hit2 = apply(as.matrix(hit2),1,sum)
+    # hit2 = as.numeric(hit2>0)
+
+    # #functional
     hit2 = rep(0,dim(grid_total)[1])
     for(i in seq(dim(liste)[1])){
       hit2 = hit2 + (sqrt((grid_total[,1]-liste[i,1])^2+(grid_total[,2]-liste[i,2])^2)<liste[i,3])
     }
     hit2 = as.numeric(hit2>0)
+    return(hit2)
+
   })
   stopCluster(cl)
   grid_computed = do.call(cbind,grid_computed)
   write.csv(cbind(grid_total,grid_computed),paste0(map_prob_graph,"/",csv_name,"_indicatrice.csv"))
+  write.csv()
   return(list(grid_computed,result_compute_N_NCS))
 }
 
 compute_N_NCS = function(tet,a,r0,vector_rep){
-  # grid_total = expand.grid(x=seq(-rectangle_range[1]/2,rectangle_range[1]/2,length.out = 400),
-  #                          y=seq(-rectangle_range[2]/2,rectangle_range[2]/2, length.out = 300))
-  
   ncores = detectCores()-1
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
   # liste_grid = lapply(X = vector_rep, function(rep){
+  gc()
   result = mclapply(X = vector_rep, mc.cores = ncores,mc.preschedule = TRUE,function(rep){
     result_NCS = NCS(tet,a,r0)
-    
   })
-  stopCluster(cl)
   return(result)
 }
