@@ -895,37 +895,19 @@ CSV_compute_N_NCS = function(tet,r0,a,vector_rep,rectangle_range,csv_name){
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
   grid_computed = mclapply(result_compute_N_NCS,mc.cores = ncores, function(liste){
-    #alternativa: demasiada RAM por gran matriz hit2
-    # hit2 = as.matrix(sqrt(outer(grid_total[,1],liste[,1],"-")^2+outer(grid_total[,2],liste[,2],"-")^2))
-    # hit2 = sapply(1:(dim(hit2)[2]),function(i){
-    #   test1 = hit2[,i]<liste[i,3]
-    #   return(test1)
-    # })
-    # hit2 = apply(as.matrix(hit2),1,sum)
-    # hit2 = as.numeric(hit2>0)
-    #optimizado: mucha ram igual
-    # hit2 = sapply(1:(dim(liste)[1]),function(i){
-    #   hit2 = sqrt(outer(grid_total[,1],liste[i,1],"-")^2+outer(grid_total[,2],liste[i,2],"-")^2)
-    #   hit2 = hit2[,1]<liste[i,3]
-    #   return(hit2)
-    # })
-    # hit2 = apply(as.matrix(hit2),1,sum)
-    # hit2 = as.numeric(hit2>0)
-
     # #functional
     hit2 = rep(0,dim(grid_total)[1])
     for(i in seq(dim(liste)[1])){
       hit2 = hit2 + (sqrt((grid_total[,1]-liste[i,1])^2+(grid_total[,2]-liste[i,2])^2)<liste[i,3])
     }
     hit2 = as.numeric(hit2>0)
-    return(hit2)
+    return(list(liste,hit2))
 
   })
   stopCluster(cl)
-  grid_computed = do.call(cbind,grid_computed)
-  write.csv(cbind(grid_total,grid_computed),paste0(map_prob_graph,"/",csv_name,"_indicatrice.csv"))
-  write.csv()
-  return(list(grid_computed,result_compute_N_NCS))
+  write.csv(cbind(grid_total,do.call(cbind,lapply(grid_computed,"[[",2))),paste0(map_prob_graph,"/",csv_name,"_indicatrice.csv"))
+  write.csv(do.call(rbind,lapply(grid_computed,"[[",1)),paste0(map_prob_graph,"/",csv_name,"_NCS.csv"))
+  return("FIN")
 }
 
 compute_N_NCS = function(tet,a,r0,vector_rep){

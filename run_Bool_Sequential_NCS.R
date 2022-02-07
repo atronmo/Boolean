@@ -15,7 +15,7 @@ den = a^2*r0^2+2*a*r0+2 #denominateur des probabilité du melange de la distr.
 p_i = c(a^2*r0^2,2*a*r0,2)/den # probas du mélange
 
 cum_pi = cumsum(p_i) #distribution cumulée des probas du mélange
-vector_rep = 1:3
+vector_rep = 1:500
 NCS_Boolean = TRUE
 # for(K in c(200,400,800)){
 for(K in 200){
