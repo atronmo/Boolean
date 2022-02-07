@@ -477,7 +477,7 @@ plot_variogram_grid_boolean = function(vector_rep,csv_name,rectangle_range,a,tet
   avr_vario_grid_list = vario.average(vario_grid_list)
   #Horizontal Direction
   pdf(paste0(map_prob_graph,"/",csv_name,"_vario_0.pdf"))
-  plot(NULL,NULL,ylim=c(0,0.3),xlim=c(0,rectangle_range[1]/2),main = paste0(N, " Independent Simulations: 0[deg] Direction"),
+  plot(NULL,NULL,ylim=c(0,0.3),xlim=c(0,rectangle_range[1]/2),main = paste0(""),
        xlab = "Range",ylab = "Sill",xaxs = "i",yaxs = "i")
   for(i in seq(N)){plot(vario_grid_list[[i]],add=T,lty = 2, lwd =1,col = "gray",idir0 = 1,varline = FALSE)}
   plot(avr_vario_grid_list,add=T,lty = 1, lwd =2,col = "black",idir0 = 1,varline = FALSE)
@@ -487,7 +487,7 @@ plot_variogram_grid_boolean = function(vector_rep,csv_name,rectangle_range,a,tet
   dev.off()
   #Vertical Direction
   pdf(paste0(map_prob_graph,"/",csv_name,"_vario_90.pdf"))
-  plot(NULL,NULL,ylim=c(0,0.3),xlim=c(0,rectangle_range[2]/2),main = paste0(N, " Independent Simulations: 90[deg] Direction"),
+  plot(NULL,NULL,ylim=c(0,0.3),xlim=c(0,rectangle_range[2]/2),main = "",
        xlab = "Range",ylab = "Sill",xaxs = "i",yaxs = "i")
   for(i in seq(N)){plot(vario_grid_list[[i]],add=T,lty = 2, lwd =1,col = "gray",idir0 = 2,varline = FALSE)}
   plot(avr_vario_grid_list,add=T,lty = 1, lwd =2,col = "black",idir0 = 2,varline = FALSE)

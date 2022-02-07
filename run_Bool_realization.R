@@ -81,7 +81,7 @@ ech[,1] = ech[,1]-rectangle_range[1]/2
 ech[,2] = ech[,2]-rectangle_range[2]/2
 K=200
 #sequential_point = sequential_simulation_particule(tet,r0,a,ech,K)
-sequential_point = sequential_simulation(tet,r0,a,ech,K,parallel = FALSE)
+sequential_point = sequential_simulation(tet,r0,a,ech,K)
 #avoiding
 dispbool(x_proj = sequential_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "sequential_avoiding_random_Z.pdf")
 dispbool2(x_proj = sequential_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "sequential_avoiding_random_no_point.pdf")
@@ -101,7 +101,7 @@ ech = read.table("pcl")
 ech[,1] = ech[,1]-rectangle_range[1]/2
 ech[,2] = ech[,2]-rectangle_range[2]/2
 K=200
-sequential_point = sequential_simulation_particule(tet,r0,a,ech,K)
+sequential_point = sequential_simulation(tet,r0,a,ech,K)
 #avoiding
 dispbool(x_proj = sequential_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "sequential_avoiding_line_Z.pdf")
 dispbool2(x_proj = sequential_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "sequential_avoiding_line_no_point.pdf")

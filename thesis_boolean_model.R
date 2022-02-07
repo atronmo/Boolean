@@ -165,6 +165,7 @@ iterative_boolean_sim = function(tet,r0,a,ech,set.seed,init_matrix){
 
 sequential_avoiding_boolean_sim = function(tet,r0,a,ech){
   #avoiding functional
+  p = newParticule(NULL)
   N = rpois(1,tet*pi*(r0^2+2*r0/a+2/a^2)) #selon l'expression de la premiere partie
   # rayons des disques
   den = a^2*r0^2+2*a*r0+2 #denominateur des probabilité du melange de la distr. 
@@ -180,22 +181,32 @@ sequential_avoiding_boolean_sim = function(tet,r0,a,ech){
   m = (R+r0)*sqrt(runif(N)) #rayon en polaires
   x_proj = cbind((m)*cos(al),m*sin(al)) #projection aux axis cartesiennes
   x_proj = cbind(x_proj,R)
-  test= numeric(N)
-  for(j in seq(N)){
-    if(as.numeric(sum(sqrt((ech[,1]-x_proj[j,1])^2+(ech[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
-  }
-  x_proj = x_proj[test==0,,drop = F]
+  test = as.matrix(sqrt(outer(ech[,1],x_proj[,1],"-")^2+outer(ech[,2],x_proj[,2],"-")^2))
+  test = sapply(1:N,function(i){
+    test1 = test[,i]<x_proj[i,3]
+    return(test1)
+  })
+  test = apply(as.matrix(test),2,sum)
   
-  # les disques générés
-  # if(plot == TRUE){dispbool3(x_proj = x_proj,rectangle_range = rectangle_range,pdf_name = paste0(pdf_name,"_avoiding.pdf"),ech = ech)}
-  return(x_proj)
+  # test= numeric(N)
+  # for(j in seq(N)){
+  #   if(as.numeric(sum(sqrt((ech[,1]-x_proj[j,1])^2+(ech[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
+  # }
+  x_proj = x_proj[test==0,,drop = F]
+  if(length(x_proj) == 0){return(NULL)}
+  for(j in 1:(dim(x_proj)[1])){p = newParticule(data = x_proj[j,],par = p)}
+  return(p)
+  
 }
 
 
-sequential_hitting_boolean_sim_checking_background = function(tet,r0,a,ech,K,i,ech_avoiding,parallel = FALSE,ncores){
-  creating_object = function(k,tet,t0,a,i,ech_avoiding,ech){
+sequential_hitting_boolean_sim_checking_background = function(tet,r0,a,ech,K,i,ech_avoiding,parallel = FALSE,ncores,particle = FALSE,p=NULL){
+  creating_object = function(k,tet,t0,a,i,ech_avoiding,ech,particle,p){
     N = rpois(1,tet*pi*(2/a^2)) #selon l'expression de la premiere partie
-    if(N == 0){return(NULL)}
+    if(N == 0){
+      if(particle == TRUE){return(p[[k]])}
+      else{return(NULL)}
+    }
     # rayons des disques
     R = rgamma(N,3,a)
     # implantations	
@@ -203,23 +214,48 @@ sequential_hitting_boolean_sim_checking_background = function(tet,r0,a,ech,K,i,e
     m = R*sqrt(runif(N)) #rayon en polaires
     x_proj = cbind(m*cos(al)+ech[i,1],m*sin(al)+ech[i,2]) #projection aux axis cartesiennes
     x_proj = as.matrix(cbind(x_proj,R,k))
-    test= numeric(N)
-    for(j in seq(N)){
-      if(as.numeric(sum(sqrt((ech_avoiding[,1]-x_proj[j,1])^2+(ech_avoiding[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
-    }
+    test = as.matrix(sqrt(outer(ech_avoiding[,1],x_proj[,1],"-")^2+outer(ech_avoiding[,2],x_proj[,2],"-")^2))
+    
+    test = sapply(1:N,function(i){
+      test1 = test[,i]<x_proj[i,3]
+      return(test1)
+    })
+    test = apply(as.matrix(test),2,sum)
+    
+    # test= numeric(N)
+    # for(j in seq(N)){
+    #   if(as.numeric(sum(sqrt((ech_avoiding[,1]-x_proj[j,1])^2+(ech_avoiding[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
+    # }
     x_proj = x_proj[test==0,,drop=F]
-    if(length(x_proj)==0){return(NULL)}
-    return(x_proj)
+    if(length(x_proj)==0){
+      if(particle == TRUE){return(p[[k]])}
+      else{return(NULL)}
+    }
+    if(particle == TRUE){
+      for(j in 1:(dim(x_proj)[1])){p[[k]] = newParticule(data = x_proj[j,],id = k,idx = k,par = p[[k]])}
+      return(p[[k]])
+    }
+    else{return(x_proj)}
   }
   if(parallel == FALSE){
-    ech_hitting = lapply(X = seq(K),creating_object,tet,t0,a,i,ech_avoiding,ech)
+    if(particle == TRUE){
+      ech_hitting = lapply(X = seq(K),creating_object,tet,t0,a,i,ech_avoiding,ech,particle = TRUE,p)
+      
+    }
+    else{ech_hitting = lapply(X = seq(K),creating_object,tet,t0,a,i,ech_avoiding,ech,particle = FALSE)}
   }
   else{
-    ech_hitting = mclapply(X = seq(K),mc.preschedule = TRUE,mc.cores = ncores,
-                           creating_object,tet,t0,a,i,ech_avoiding,ech)
+    if(particle == TRUE){
+      ech_hitting = mclapply(X = seq(K),mc.preschedule = TRUE,mc.cores = ncores,creating_object,tet,t0,a,i,ech_avoiding,ech,particle = TRUE,p)
+    }
+    else{ech_hitting = mclapply(X = seq(K),mc.preschedule = TRUE,mc.cores = ncores,
+                           creating_object,tet,t0,a,i,ech_avoiding,ech,particle = FALSE)}
   }
   return(ech_hitting)
 }
+
+
+
 
 sequential_hitting_boolean_sim = function(tet,r0,a,ech,K,parallel = FALSE){
   # avoiding = sequential_avoiding_boolean_sim(tet,r0,a,ech,pdf_name = "avoiding_functional")
@@ -228,36 +264,45 @@ sequential_hitting_boolean_sim = function(tet,r0,a,ech,K,parallel = FALSE){
   order_hitting = sample(which(ech[,3]==1))
   idx_matrix = matrix(0,nrow = K,ncol = length(order_hitting))
   for(t in seq(order_hitting)){
+  # for(t in 1:1){
+    i = order_hitting[t]
     #this function add objects: it erases the objects proposed that hit the background points
     if(parallel == TRUE){
       ncores = detectCores()-1
       cl = makeCluster(ncores)
       dummy = registerDoParallel(cl)
-      ech_hitting_list_prop = sequential_hitting_boolean_sim_checking_background(tet,r0,a,ech,K,order_hitting[t],ech_avoiding,parallel = parallel,ncores)
+      ech_hitting_list_prop = sequential_hitting_boolean_sim_checking_background(tet,r0,a,ech,K,i,ech_avoiding,parallel = parallel,ncores,particle = FALSE)
       stopCluster(cl)
     }
-    else{ech_hitting_list_prop = sequential_hitting_boolean_sim_checking_background(tet,r0,a,ech,K,order_hitting[t],ech_avoiding)}
-    for(j in seq(K)){
-      if(is.null(ech_hitting_list_prop[[j]])){next}
-      ech_hitting[[j]]  = rbind(ech_hitting[[j]],ech_hitting_list_prop[[j]])
+    else{ech_hitting_list_prop = sequential_hitting_boolean_sim_checking_background(tet = tet,r0 = r0,a = a,ech = ech,K = K,i = i,ech_avoiding = ech_avoiding,particle = FALSE)}
+    #merging
+    for(k in 1:K){
+      if((is.null(ech_hitting_list_prop[[k]]) | length(ech_hitting_list_prop[[k]])==0) & t == 1){next}
+      ech_hitting_list_prop[[k]] = rbind(ech_hitting_list_prop[[k]],ech_hitting[[k]])
     }
-    hitting_matrix = lapply(ech_hitting, function(k){
-      if(is.null(k)){return(list(NULL,0))}
-      if(length(k)==0){return(list(NULL,0))}
-      test = numeric(dim(k)[1])
-      for(j in seq(test)){
-        if(as.numeric(sum(sqrt((ech[order_hitting[t],1]-k[j,1])^2+(ech[order_hitting[t],2]-k[j,2])^2)<k[j,3])>0)){test[j] = 1}
-      }
-      if(sum(test)>0){return(list(k,1))}
-      else{return(list(NULL,0))}
+    idx = sapply(ech_hitting_list_prop, function(k){
+      if((is.null(k) | length(k)==0) & t == 1){return(0)}
+      # test = sqrt(outer(k[,1],ech[i,1],"-")^2+outer(k[,2],ech[i,2],"-")^2)<k[,3]
+      test = as.matrix(sqrt(outer(ech[i,1],k[,1],"-")^2+outer(ech[i,2],k[,2],"-")^2))
+      #if foreground is overlapped 
+      test = sapply(1:(dim(test)[2]),function(j){return(test[,j]<k[j,3])})
+      #how many objects cover ci
+      test = apply(as.matrix(test),2,sum)
+      
+      #is this number greater than 1
+      if(sum(test)>0){return(1)}
+      else{return(0)}
     })
-    if(sum(sapply(hitting_matrix,"[[",2))==0){cat("ERROR: NOT ENOUGHT PATICLES ! ");break}
-    idx = sort(sample(x = 1:K,replace = TRUE,size = K,prob = sapply(hitting_matrix,"[[",2)))
-    ech_hitting_list_prop_prop = rec.list(K)
-    for(j in seq(K)){ech_hitting_list_prop_prop[[j]] = ech_hitting[[idx[j]]]}
-    for(j in seq(K)){ech_hitting[[j]] = ech_hitting_list_prop_prop[[j]]}
+    if(sum(idx)==0){cat("ERROR: NOT ENOUGHT PATICLES ! ");break}
+    idx = sample(x = 1:K,replace = TRUE,size = K,prob = idx)
+    # ech_hitting_list_prop_prop = rec.list(K)
+    # for(j in seq(K)){ech_hitting_list_prop_prop[[j]] = ech_hitting_list_prop[[idx[j]]]}
+    # for(j in seq(K)){ech_hitting[[j]] = ech_hitting_list_prop_prop[[j]]}
+    
+    for(j in seq(K)){ech_hitting[[j]] = ech_hitting_list_prop[[idx[j]]]}
     #adding one element to the avoiding
-    ech_avoiding = rbind(ech_avoiding,ech[order_hitting[t],])
+    ech_avoiding = rbind(ech_avoiding,ech[i,])
+    # rm(ech_hitting_list_prop_prop)
   }
   return(ech_hitting)
 }
@@ -265,10 +310,9 @@ sequential_hitting_boolean_sim = function(tet,r0,a,ech,K,parallel = FALSE){
 sequential_simulation = function(tet,r0,a,ech,K,parallel){
   avoiding = sequential_avoiding_boolean_sim(tet = tet,r0 = r0,a = a,ech = ech)
   hitting = sequential_hitting_boolean_sim(tet = tet,r0 = r0,
-                                           a = a,ech = ech,K = K,
-                                           parallel = parallel)
-  
-  return(list(avoiding,hitting[[sample(x = 1:K,size = 1)]]))
+                                           a = a,ech = ech,K = K)
+  set.seed(NULL)
+  return(list(t(buildSimu(avoiding)),hitting[[sample(x = 1:K,size = 1)]]))
   
   
 }
@@ -336,12 +380,13 @@ map_prob_sequential_NCS = function(tet,r0,a,ech,vector_rep,
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
   # liste_sim_sequential = lapply(X = vector_rep, function(rep){
+  gc()
   liste_sim_sequential = mclapply(X = vector_rep,mc.cores = ncores, function(rep){
     if(NCS_Boolean == TRUE){ech_NCS = check_points_NCS(tet,a,r0,ech)}
     else{ech_NCS = ech}
     init_time = Sys.time()
-    # sequential_point = sequential_simulation(tet,r0,a,ech_NCS,K,parallel = FALSE)
-    sequential_point = sequential_simulation_particule(tet,r0,a,ech_NCS,K)
+    sequential_point = sequential_simulation(tet,r0,a,ech_NCS,K,parallel = FALSE)
+    # sequential_point = sequential_simulation_particule(tet = tet,r0 = r0,a = a,ech = ech_NCS,K = K)
     end_time = Sys.time()
     #avoiding
     hit_avoiding = rep(0,dim(grid_total)[1])
@@ -366,6 +411,7 @@ map_prob_sequential_NCS = function(tet,r0,a,ech,vector_rep,
     hit2 = as.numeric(hit2>0)
     return(list(hit_avoiding,hit_hitting,hit2,sequential_point,as.numeric(difftime(time1 = end_time,time2 = init_time,units = "mins"))))
   })
+  
   stopCluster(cl)
   #information of Grid
   matrix_list = do.call(cbind, lapply(liste_sim_sequential,"[[",1))
@@ -392,6 +438,8 @@ map_prob_sequential_NCS = function(tet,r0,a,ech,vector_rep,
   #time simulation
   time_processing = sapply(liste_sim_sequential,"[[",5)
   write.csv(time_processing,paste0(map_prob_graph,"/",csv_name,"_time_processing.csv"))
+  rm(liste_sim_sequential)
+  gc()
   return("FIN")
   
 }
@@ -663,6 +711,7 @@ variogram_grid_boolean = function(csv_name,rectangle_range){
   ncores = detectCores()-1
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
+  gc()
   vlist = mclapply(seq(dim(matrix_list_indicatrice)[2]),mc.cores = ncores,function(i){
     matrix_list = db.locerase(matrix_list,"z")
     matrix_list = db.locate(matrix_list,3+i,"z")
@@ -670,6 +719,8 @@ variogram_grid_boolean = function(csv_name,rectangle_range){
     vario.write(vario = vario,filename = paste0(map_prob_graph,"/",csv_name,"_vario_",i))
     return(vario)}
     )
+  rm(vlist)
+  gc()
   return("FIN")
   # v_graph = vario.average(vlist)
   # plot(v_graph,idir0 = 1,lwd = 2,lty = 1, add = TRUE, varline = FALSE)
@@ -733,9 +784,7 @@ sequential_hitting_boolean_sim_particle = function(tet,r0,a,ech,K){
 sequential_hitting_boolean_sim_particle_2 = function(tet,r0,a,ech,K){
   parallel_K = function(x){
     N = rpois(1,tet*pi*(2/a^2)) #selon l'expression de la premiere partie
-    if(N == 0){p[[x]] = newParticule(data = NULL,id = x,idx = x,par = p[[x]])
-      return(p[[x]])
-    }
+    if(N == 0){return(p[[x]])}
     # rayons des disques
     R = rgamma(N,3,a)
     # implantations	
@@ -743,15 +792,20 @@ sequential_hitting_boolean_sim_particle_2 = function(tet,r0,a,ech,K){
     m = R*sqrt(runif(N)) #rayon en polaires
     x_proj = cbind(m*cos(al)+ech[i,1],m*sin(al)+ech[i,2]) #projection aux axis cartesiennes
     x_proj = as.matrix(cbind(x_proj,R))
-    test= numeric(N)
-    for(j in seq(N)){
-      if(as.numeric(sum(sqrt((ech_avoiding[,1]-x_proj[j,1])^2+(ech_avoiding[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
-    }
+    #checking and erasing background
+    test = as.matrix(sqrt(outer(ech_avoiding[,1],x_proj[,1],"-")^2+outer(ech_avoiding[,2],x_proj[,2],"-")^2))
+    test = sapply(1:N,function(i){
+      test1 = test[,i]<x_proj[i,3]
+      return(test1)
+    })
+    test = apply(as.matrix(test),2,sum)
+    # test= numeric(N)
+    # for(j in seq(N)){
+    #   if(as.numeric(sum(sqrt((ech_avoiding[,1]-x_proj[j,1])^2+(ech_avoiding[,2]-x_proj[j,2])^2)<R[j])>0)){test[j] = 1}
+    # }
     x_proj = x_proj[test==0,,drop=F]
-    if(length(x_proj)==0){
-      p[[x]] = newParticule(data = NULL,id = x,idx = x,par = p[[x]])
-      return(p[[x]])
-    }
+    
+    if(length(x_proj)==0){return(p[[x]])}
     for(j in 1:(dim(x_proj)[1])){p[[x]] = newParticule(data = x_proj[j,],id = x,idx = x,par = p[[x]])}
     return(p[[x]])
   }
@@ -762,34 +816,56 @@ sequential_hitting_boolean_sim_particle_2 = function(tet,r0,a,ech,K){
   for(k in 1:K){p = c(p,newParticule(NULL))}
   p_prop = list()
   for(t in seq(order_hitting)){
-  # for(t in 1:1){#test
+  # for(t in 1:2){#test
     i=order_hitting[t]
-    p_part = lapply(1:K,parallel_K)
-    # stopCluster(cl)
-    idx = sapply(1:K, function(k){
-      # if(t == 1){
-      if(is.null(t(buildSimu(p_part[[k]])))){return(0)}
-      if(length(t(buildSimu(p_part[[k]])))==0){return(0)}
-      #   #k_test = t(buildSimu(p_part[[k]]))
-      # }
-      #else if(is.null(p_part[[k]])| length(p_part[[k]])==0){k_test = t(buildSimu(p[[k]]))}
-      #else{k_test = rbind(t(buildSimu(p[[k]])),t(buildSimu(p_part[[k]])))}
-      k_test = t(buildSimu(p_part[[k]]))
-      test = numeric(dim(k_test)[1])
-      for(j in 1:length(test)){
-        if(as.numeric(sum(sqrt((ech[order_hitting[t],1]-k_test[j,1])^2+(ech[order_hitting[t],2]-k_test[j,2])^2)<k_test[j,3])>0)){test[j] = 1}
-      }
+    
+    p_part = sequential_hitting_boolean_sim_checking_background(tet = tet,r0 = r0,a = a,ech = ech,K = K,i = i,ech_avoiding = ech_avoiding,particle = TRUE,p = p)
+    
+    # p_part = lapply(1:K,parallel_K)
+    
+    #########################
+    idx = sapply(p_part, function(k){
+      k = t(buildSimu(k))
+      if((is.null(k) | length(k)==0) & t == 1){return(0)}
+      # test = sqrt(outer(k[,1],ech[i,1],"-")^2+outer(k[,2],ech[i,2],"-")^2)<k[,3]
+      test = as.matrix(sqrt(outer(ech[i,1],k[,1],"-")^2+outer(ech[i,2],k[,2],"-")^2))
+
+      test = sapply(1:(dim(test)[2]),function(i){
+        test1 = test[,i]<k[i,3]
+        return(test1)
+      })
+      test = apply(as.matrix(test),2,sum)
       if(sum(test)>0){return(1)}
       else{return(0)}
     })
+    # 
+    #option LENT, TROP LENT: buildsimu each time = lent
+    # idx = sapply(p_part, function(k){
+    #   if((is.null(t(buildSimu(k))) | length(t(buildSimu(k)))==0) & t == 1){return(0)}
+    #   # test = sqrt(outer(t(buildSimu(k))[,1],ech[i,1],"-")^2+outer(t(buildSimu(k))[,2],ech[i,2],"-")^2)<t(buildSimu(k))[,3]
+    #   test = as.matrix(sqrt(outer(ech[i,1],t(buildSimu(k))[,1],"-")^2+outer(ech[i,2],t(buildSimu(k))[,2],"-")^2))
+    #   
+    #   test = sapply(1:(dim(test)[2]),function(i){
+    #     test1 = test[,i]<t(buildSimu(k))[i,3]
+    #     return(test1)
+    #   })
+    #   test = apply(as.matrix(test),2,sum)
+    #   
+    #   
+    #   if(sum(test)>0){return(1)}
+    #   else{return(0)}
+    # })
+   
+    
+    
     if(sum(idx)==0){cat("ERROR: NOT ENOUGHT PATICLES ! ");break}
     idx = sample(x = 1:K,replace = TRUE,size = K,prob = idx)
     
-    p_prop = p_part
-    for(j in 1:K){p[[j]] = p_prop[[idx[j]]]}
+    #p_prop = p_part
+    for(j in 1:K){p[[j]] = p_part[[idx[j]]]}
     #adding one element to the avoiding
     ech_avoiding = rbind(ech_avoiding,ech[order_hitting[t],])
-    p_prop = list()
+    p_part = list()
     
   }
   return(p)
@@ -799,7 +875,7 @@ sequential_simulation_particule = function(tet,r0,a,ech,K){
   avoiding = sequential_avoiding_boolean_sim(tet = tet,r0 = r0,a = a,ech = ech)
   hitting = sequential_hitting_boolean_sim_particle_2(tet = tet,r0 = r0,a = a,ech = ech,K = K)
   
-  return(list(avoiding,t(buildSimu(hitting[[sample(x = 1:K,size = 1)]]))))
+  return(list(t(buildSimu(avoiding)),t(buildSimu(hitting[[sample(x = 1:K,size = 1)]]))))
   
   
 }
@@ -822,6 +898,7 @@ NCS = function(tet,a,r0){
 
 #Check if the points are background or foreground from a set of points
 check_points_NCS = function(tet,a,r0,ech){
+  set.seed(NULL)
   N = rpois(1,tet*pi*(r0^2+2*r0/a+2/a^2)) #selon l'expression de la premiere partie
   den = a^2*r0^2+2*a*r0+2 #denominateur des probabilité du melange de la distr. 
   p_i = c(a^2*r0^2,2*a*r0,2)/den # probas du mélange
