@@ -340,7 +340,7 @@ hist_ind_sim_iterative = function(tet,r0,a,input_csv){
   # limits_y = c(0,max(object_matrix[,-1],na.rm = TRUE))
   limits_y = floor(c(tetaD-2*sqrt(tetaD)-100,tetaD+2*sqrt(tetaD)+100))
   division_quadriculado_y = 5
-  ggplot(df_vector,aes(x = V1,y = df_vector,color = )) +
+  ggplot(df_vector,aes(x = V1,y = df_vector)) +
     labs(title = bquote("Number of Objects at the Final Iteration"), 
          x = bquote("Independent Simulation"),y = bquote("Number of Objects")) +
     theme_light(base_size = base_size,base_line_size = base_line_size) +
@@ -501,10 +501,7 @@ plot_variogram_grid_boolean = function(vector_rep,csv_name,rectangle_range,a,tet
 #QQ PLOT
 qq_plot = function(tet,r0,a,radius,csv_name){
   map_prob_graph = "map_prob_graphs"
-  list_NCS_R = radius
-  
-
-  Z <- list_NCS_R      # random sample from exponential distribution
+  Z <- radius      # random sample from exponential distribution
   p <- ppoints(100)    # 100 equally spaced points on (0,1), excluding endpoints
   q <- quantile(Z,p=p) # percentiles of the sample distribution
   pdf(paste0(map_prob_graph,"/QQ_PLOT_",csv_name,".pdf"))

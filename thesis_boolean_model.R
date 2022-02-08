@@ -12,6 +12,7 @@ library("reshape2")
 source("Boolean_graphs.R")
 source("fn_particle.R")
 library("fields")
+library("pbmcapply")
 rec.list <- function(len){
   if(length(len) == 1){
     vector("list", len)
@@ -54,6 +55,8 @@ N_points_2 = function(n,x_proj,R,rectangle_range){
 #CS
 #initialization
 initialization = function(r0,rectangle_range,ech,set.seed){
+  p_i = c(a^2*r0^2,2*a*r0,2)/den # probas du mélange
+  cum_pi = cumsum(p_i) #distribution cumulée des probas du mélange
   xcond = NULL #projection of the points for the initialisation
   Rcond = NULL	 # rayon from this points
   hit = ech[,3]
@@ -86,6 +89,8 @@ initialization = function(r0,rectangle_range,ech,set.seed){
 
 iterative_boolean_sim = function(tet,r0,a,ech,set.seed,init_matrix){
   #iteration number
+  p_i = c(a^2*r0^2,2*a*r0,2)/den # probas du mélange
+  cum_pi = cumsum(p_i) #distribution cumulée des probas du mélange
   tetaD = tet*pi*(r0^2+2*r0/a+2/a^2) #expected value
   Rcond = init_matrix[,3]
   xcond = init_matrix[,1:2]
@@ -279,7 +284,7 @@ sequential_simulation = function(tet,r0,a,ech,K){
 }
 
 map_prob_iterative_NCS = function(tet,r0,a,ech,vector_rep,
-                              rectangle_range,csv_name,NCS_Boolean = TRUE){
+                              rectangle_range,csv_name,NCS_Boolean,NCS_Boolean_point_fixe){
   map_prob_graph = "map_prob_graphs"
   dir.create(paste0(map_prob_graph),showWarnings = FALSE)
   #init
@@ -289,11 +294,23 @@ map_prob_iterative_NCS = function(tet,r0,a,ech,vector_rep,
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
   set.seed=NULL
-  liste_sim_iterative = mclapply(X = vector_rep, mc.cores = ncores,function(rep){
+  liste_sim_iterative = pbmclapply(X = vector_rep, mc.cores = ncores,function(rep){
     if(NCS_Boolean == TRUE){
-      x = NCS(tet = tet,a = a,r0 = r0)
-      ech_NCS = check_points_NCS(ech = ech,x = x)
+      if(NCS_Boolean_point_fixe == TRUE){
+        x = NCS(tet = tet,a = a,r0 = r0)
+        #check the point vaue
+        ech_NCS = check_points_NCS(ech = ech,x = x)
+        dispbool3(x,rectangle_range,ech_NCS,paste0("NCS_",csv_name,"_",rep))
       }
+      else{
+        #new points randomly chosen (uniformly in the rectangle)
+        ech = cbind(runif(n = 100,min = -rectangle_range[1]/2,rectangle_range[1]/2),runif(n = 100,min = -rectangle_range[2]/2,rectangle_range[2]/2))
+        #NCS to test the value of the points
+        x = NCS(tet = tet,a = a,r0 = r0)
+        ech_NCS = check_points_NCS(ech = ech,x = x)
+        dispbool3(x,rectangle_range,ech_NCS,paste0("NCS_",csv_name,"_",rep))
+      }
+    }
     else{ech_NCS = ech}
     init_time = Sys.time()
     init_matrix = initialization(r0,rectangle_range,ech_NCS,set.seed = FALSE)
@@ -335,7 +352,7 @@ map_prob_iterative_NCS = function(tet,r0,a,ech,vector_rep,
 
 
 map_prob_sequential_NCS = function(tet,r0,a,ech,vector_rep,
-                                   rectangle_range,csv_name,K,NCS_Boolean){
+                                   rectangle_range,csv_name,K,NCS_Boolean,NCS_Boolean_point_fixe){
   map_prob_graph = "map_prob_graphs"
   dir.create(paste0(map_prob_graph),showWarnings = FALSE)
   grid_total = as.matrix(expand.grid(x=seq(-rectangle_range[1]/2,rectangle_range[1]/2,length.out = 400),
@@ -344,10 +361,22 @@ map_prob_sequential_NCS = function(tet,r0,a,ech,vector_rep,
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
   gc()
-  liste_sim_sequential = mclapply(X = vector_rep,mc.cores = ncores, function(rep){
+  liste_sim_sequential = pbmclapply(X = vector_rep,mc.cores = ncores, function(rep){
     if(NCS_Boolean == TRUE){
-      x = NCS(tet = tet,a = a,r0 = r0)
-      ech_NCS = check_points_NCS(ech = ech,x = x)
+      if(NCS_Boolean_point_fixe == TRUE){
+        x = NCS(tet = tet,a = a,r0 = r0)
+        #check the point vaue
+        ech_NCS = check_points_NCS(ech = ech,x = x)
+        dispbool3(x,rectangle_range,ech_NCS,paste0("NCS_",csv_name,"_",rep))
+      }
+      else{
+        #new points randomly chosen (uniformly in the rectangle)
+        ech = cbind(runif(n = 100,min = -rectangle_range[1]/2,rectangle_range[1]/2),runif(n = 100,min = -rectangle_range[2]/2,rectangle_range[2]/2))
+        #NCS to test the value of the points
+        x = NCS(tet = tet,a = a,r0 = r0)
+        ech_NCS = check_points_NCS(ech = ech,x = x)
+        dispbool3(x,rectangle_range,ech_NCS,paste0("NCS_",csv_name,"_",rep))
+        }
       }
     else{ech_NCS = ech}
     init_time = Sys.time()
@@ -678,7 +707,7 @@ variogram_grid_boolean = function(csv_name,rectangle_range){
   cl = makeCluster(ncores)
   dummy = registerDoParallel(cl)
   gc()
-  vlist = mclapply(seq(dim(matrix_list_indicatrice)[2]),mc.cores = ncores,function(i){
+  vlist = pbmclapply(seq(dim(matrix_list_indicatrice)[2]),mc.cores = ncores,function(i){
     matrix_list = db.locerase(matrix_list,"z")
     matrix_list = db.locate(matrix_list,3+i,"z")
     vario = vario.grid(matrix_list,nlag = c(rectangle_range[1]*100/2,rectangle_range[2]*100/2))
