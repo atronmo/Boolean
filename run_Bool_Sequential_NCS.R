@@ -8,7 +8,7 @@ den = a^2*r0^2+2*a*r0+2 #denominateur des probabilité du melange de la distr.
 rectangle_range = c(8,6)
 
 NCS_Boolean = TRUE
-vector_rep = 1:500
+vector_rep = 1:500 #blah
 # for(K in c(200,400,800)){
 for(K in 200){
   
