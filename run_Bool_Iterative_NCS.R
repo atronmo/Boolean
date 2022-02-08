@@ -21,7 +21,7 @@ NCS_Boolean = TRUE
 ech = read.table("pc")
 ech[,1] = ech[,1]-rectangle_range[1]/2
 ech[,2] = ech[,2]-rectangle_range[2]/2
-csv_name = paste0("Bool_iterative_random_NCS")
+csv_name = ifelse(NCS_Boolean==TRUE,paste0("Bool_iterative_random_NCS_K_",K),paste0("Bool_iterative_random_K_",K))
 dir.create(csv_name)
 setwd(csv_name)
 #I hid it because I can activated accidentally, but it works !
@@ -38,7 +38,7 @@ setwd("..")
 ech = read.table("pcl")
 ech[,1] = ech[,1]-rectangle_range[1]/2
 ech[,2] = ech[,2]-rectangle_range[2]/2
-csv_name = paste0("Bool_iterative_line_NCS")
+csv_name = ifelse(NCS_Boolean==TRUE,paste0("Bool_iterative_line_NCS_K_",K),paste0("Bool_iterative_line_K_",K))
 dir.create(csv_name)
 setwd(csv_name)
 #I hid it because I can activated accidentally, but it works !
