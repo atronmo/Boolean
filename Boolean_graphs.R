@@ -482,7 +482,7 @@ plot_variogram_grid_boolean = function(vector_rep,csv_name,rectangle_range,a,tet
   for(i in seq(N)){plot(vario_grid_list[[i]],add=T,lty = 2, lwd =1,col = "gray",idir0 = 1,varline = FALSE)}
   plot(avr_vario_grid_list,add=T,lty = 1, lwd =2,col = "black",idir0 = 1,varline = FALSE)
   curve(expr = variogram_x_h(x,tet,a),add=T,col=2,lwd=2,from = 0, to = rectangle_range[1]/2)
-  legend("bottomright", legend=c("Sim", "Mean","Model"),
+  legend("bottomright", legend=c("Sim", "Average","Model"),
          col=c("gray","black","red"), lty=c(2,1,1), lwd = c(1,2,2), cex=0.8)
   dev.off()
   #Vertical Direction
@@ -492,7 +492,7 @@ plot_variogram_grid_boolean = function(vector_rep,csv_name,rectangle_range,a,tet
   for(i in seq(N)){plot(vario_grid_list[[i]],add=T,lty = 2, lwd =1,col = "gray",idir0 = 2,varline = FALSE)}
   plot(avr_vario_grid_list,add=T,lty = 1, lwd =2,col = "black",idir0 = 2,varline = FALSE)
   curve(expr = variogram_x_h(x,tet,a),add=T,col=2,lwd=2,from = 0, to = rectangle_range[2]/2)
-  legend("bottomright", legend=c("Sim", "Mean","Model"),
+  legend("bottomright", legend=c("Sim", "Average","Model"),
          col=c("gray","black","red"), lty=c(2,1,1), lwd = c(1,2,2), cex=0.8)
   dev.off()
   return("FIN")

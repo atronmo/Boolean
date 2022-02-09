@@ -10,7 +10,7 @@ rectangle_range = c(8,6)
 NCS_Boolean = TRUE
 vector_rep = 1:500
 # for(K in c(200,400,800)){
-for(K in 800){
+for(K in 200){
   
   
   NCS_Boolean_point_fixe = FALSE
@@ -28,7 +28,7 @@ for(K in 800){
   hist_ind_sim_sequential(tet = tet,r0 = r0,a = a,input_csv = paste0(csv_name,"_sequential"))
   
   variogram_grid_boolean(csv_name = paste0(csv_name,"_sequential"),rectangle_range)
-  # plot_variogram_grid_boolean(vector_rep = vector_rep,a = a,tet = tet,csv_name = paste0(csv_name,"_sequential"),rectangle_range = rectangle_range)
+  plot_variogram_grid_boolean(vector_rep = vector_rep,a = a,tet = tet,csv_name = paste0(csv_name,"_sequential"),rectangle_range = rectangle_range)
   setwd("..")
   
   NCS_Boolean_point_fixe = TRUE
@@ -49,7 +49,7 @@ for(K in 800){
   hist_ind_sim_sequential(tet = tet,r0 = r0,a = a,input_csv = paste0(csv_name,"_sequential"))
   
   variogram_grid_boolean(csv_name = paste0(csv_name,"_sequential"),rectangle_range)
-  # plot_variogram_grid_boolean(vector_rep = vector_rep,a = a,tet = tet,csv_name = paste0(csv_name,"_sequential"),rectangle_range = rectangle_range)
+  plot_variogram_grid_boolean(vector_rep = vector_rep,a = a,tet = tet,csv_name = paste0(csv_name,"_sequential"),rectangle_range = rectangle_range)
   setwd("..")
   
   NCS_Boolean_point_fixe = TRUE
