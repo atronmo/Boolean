@@ -313,8 +313,8 @@ map_prob_iterative_NCS = function(tet,r0,a,ech,vector_rep,
     }
     else{ech_NCS = ech}
     init_time = Sys.time()
-    init_matrix = initialization(r0,rectangle_range,ech_NCS,set.seed = FALSE)
-    iterative_point = iterative_boolean_sim(tet,r0,a,ech_NCS,set.seed,init_matrix)
+    init_matrix = initialization(r0,rectangle_range,ech_NCS,set.seed = NULL)
+    iterative_point = iterative_boolean_sim(tet,r0,a,ech_NCS,set.seed=NULL,init_matrix)
     end_time = Sys.time()
     hit2 = rep(0,dim(grid_total)[1])
     for(i in seq(dim(iterative_point[[1]])[1])){

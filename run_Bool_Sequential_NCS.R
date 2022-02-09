@@ -10,11 +10,11 @@ rectangle_range = c(8,6)
 NCS_Boolean = TRUE
 vector_rep = 1:500
 # for(K in c(200,400,800)){
-for(K in 200){
+for(K in 800){
   
   
   NCS_Boolean_point_fixe = FALSE
-  if(NCS_Boolean == TRUE){csv_name = ifelse(NCS_Boolean_point_fixe == TRUE,paste0("Bool_sequential_line_NCS_K_",K),"Bool_sequential_NCS_all_random")}
+  if(NCS_Boolean == TRUE){csv_name = ifelse(NCS_Boolean_point_fixe == TRUE,paste0("Bool_sequential_line_NCS_K_",K),paste0("Bool_sequential_NCS_all_random_K_",K))}
   if(NCS_Boolean == FALSE){csv_name = paste0("Bool_sequential_line_K_",K)}
   dir.create(csv_name)
   setwd(csv_name)
@@ -31,13 +31,11 @@ for(K in 200){
   # plot_variogram_grid_boolean(vector_rep = vector_rep,a = a,tet = tet,csv_name = paste0(csv_name,"_sequential"),rectangle_range = rectangle_range)
   setwd("..")
   
-  
-  
   NCS_Boolean_point_fixe = TRUE
   ech = read.table("pc")
   ech[,1] = ech[,1]-rectangle_range[1]/2
   ech[,2] = ech[,2]-rectangle_range[2]/2
-  if(NCS_Boolean == TRUE){csv_name = ifelse(NCS_Boolean_point_fixe == TRUE,paste0("Bool_sequential_random_NCS_K_",K),"Bool_sequential_NCS_all_random")}
+  if(NCS_Boolean == TRUE){csv_name = ifelse(NCS_Boolean_point_fixe == TRUE,paste0("Bool_sequential_random_NCS_K_",K),paste0("Bool_sequential_NCS_all_random_K_",K))}
   if(NCS_Boolean == FALSE){csv_name = paste0("Bool_sequential_random_K_",K)}
   dir.create(csv_name)
   setwd(csv_name)
@@ -58,7 +56,7 @@ for(K in 200){
   ech = read.table("pcl")
   ech[,1] = ech[,1]-rectangle_range[1]/2
   ech[,2] = ech[,2]-rectangle_range[2]/2
-  if(NCS_Boolean == TRUE){csv_name = ifelse(NCS_Boolean_point_fixe == TRUE,paste0("Bool_sequential_line_NCS_K_",K),"Bool_sequential_NCS_all_random")}
+  if(NCS_Boolean == TRUE){csv_name = ifelse(NCS_Boolean_point_fixe == TRUE,paste0("Bool_sequential_line_NCS_K_",K),paste0("Bool_sequential_NCS_all_random_K_",K))}
   if(NCS_Boolean == FALSE){csv_name = paste0("Bool_sequential_line_K_",K)}
   dir.create(csv_name)
   setwd(csv_name)
