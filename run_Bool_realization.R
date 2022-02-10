@@ -48,29 +48,29 @@ dispbool4(x_proj = x_proj,rectangle_range = rectangle_range,ech = ech,pdf_name =
 ech = read.table("pc")
 ech[,1] = ech[,1]-rectangle_range[1]/2
 ech[,2] = ech[,2]-rectangle_range[2]/2
-init_matrix = initialization(r0,rectangle_range,ech,set.seed = 12345)
-dispbool(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_random_Z")
-dispbool2(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_random_no_point")
-dispbool3(x_proj = init_matrix,ech = ech,rectangle_range = rectangle_range,pdf_name = "init_random_point")
+init_matrix = initialization(r0,rectangle_range,ech,set.seed = NULL)
+dispbool(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_random_Z.pdf")
+dispbool2(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_random_no_point.pdf")
+dispbool3(x_proj = init_matrix,ech = ech,rectangle_range = rectangle_range,pdf_name = "init_random_point.pdf")
 
-iterative_point = iterative_boolean_sim(tet,r0,a,ech,init_matrix,set.seed = 12345)
-dispbool(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_random_Z")
-dispbool2(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_random_no_point")
-dispbool3(x_proj = iterative_point[[1]],ech = ech,rectangle_range = rectangle_range,pdf_name = "iterative_random_point")
+iterative_point = iterative_boolean_sim(tet,r0,a,ech,init_matrix,set.seed = NULL)
+dispbool(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_random_Z.pdf")
+dispbool2(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_random_no_point.pdf")
+dispbool3(x_proj = iterative_point[[1]],ech = ech,rectangle_range = rectangle_range,pdf_name = "iterative_random_point.pdf")
 hist_iterative_boolean_sim(tet = tet,r0 = r0,a = a,iterative_point = iterative_point,"iterative_random")
 #points line
 ech = read.table("pcl")
 ech[,1] = ech[,1]-rectangle_range[1]/2
 ech[,2] = ech[,2]-rectangle_range[2]/2
-init_matrix = initialization(r0,rectangle_range,ech,set.seed = 12345)
-dispbool(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_line_Z")
-dispbool2(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_line_no_point")
-dispbool3(x_proj = init_matrix,ech = ech,rectangle_range = rectangle_range,pdf_name = "init_line_point")
+init_matrix = initialization(r0,rectangle_range,ech,set.seed = NULL)
+dispbool(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_line_Z.pdf")
+dispbool2(x_proj = init_matrix,r0 = r0,rectangle_range = rectangle_range,pdf_name = "init_line_no_point.pdf")
+dispbool3(x_proj = init_matrix,ech = ech,rectangle_range = rectangle_range,pdf_name = "init_line_point.pdf")
 
-iterative_point = iterative_boolean_sim(tet,r0,a,ech,init_matrix,set.seed = 12345)
-dispbool(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_line_Z")
-dispbool2(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_line_no_point")
-dispbool3(x_proj = iterative_point[[1]],ech = ech,rectangle_range = rectangle_range,pdf_name = "iterative_line_point")
+iterative_point = iterative_boolean_sim(tet,r0,a,ech,init_matrix,set.seed = NULL)
+dispbool(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_line_Z.pdf")
+dispbool2(x_proj = iterative_point[[1]],r0 = r0,rectangle_range = rectangle_range,pdf_name = "iterative_line_no_point.pdf")
+dispbool3(x_proj = iterative_point[[1]],ech = ech,rectangle_range = rectangle_range,pdf_name = "iterative_line_point.pdf")
 hist_iterative_boolean_sim(tet = tet,r0 = r0,a = a,iterative_point = iterative_point,"iterative_line")
 
 #sequential##############################################

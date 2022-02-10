@@ -98,33 +98,34 @@ hist_iterative_boolean_sim = function(tet,r0,a,iterative_point,pdf_name){
   
   tetaD = tet*pi*(r0^2+2*r0/a+2/a^2)
   
-  object_matrix = iterative_point[[2]]
-  object_init_matrix = iterative_point[[3]]
-  X = 1:length(object_matrix)
-  df = cbind(X,object_matrix,object_init_matrix)
+  Objects = iterative_point[[2]]
+  Init_Objects = iterative_point[[3]]
+  X = 1:length(Objects)
+  df = cbind(X,Objects,Init_Objects)
   df = data.frame(df)
-  df <- melt(df,id.vars = 'X', variable.name = 'series')
+  # names(df) = c("index","Objects","Init. Objects")
+  df <- melt(df,id.vars = 'X', variable.name = 'Type')
   #lines calculation
-  n_object_limit = floor(0.05*object_init_matrix[1])
-  it_n_object_limit = min(which(object_init_matrix<n_object_limit))
-  vector_n_object = object_matrix[it_n_object_limit:length(object_matrix)]
+  n_object_limit = floor(0.05*Init_Objects[1])
+  it_n_object_limit = min(which(Init_Objects<n_object_limit))
+  vector_n_object = Objects[it_n_object_limit:length(Objects)]
   
   group.colors = c("green","red","black")
   base_size = 15
   base_line_size=2
   fontsize_size = 16
   title_size = 16
-  # limits_x = range(object_matrix,na.rm = TRUE)
-  limits_x = range(0,length(object_matrix))
+  # limits_x = range(Objects,na.rm = TRUE)
+  limits_x = range(0,length(Objects))
   division_quadriculado_x = 5
-  # limits_y = c(0,max(object_matrix[,-1],na.rm = TRUE))
+  # limits_y = c(0,max(Objects[,-1],na.rm = TRUE))
   limits_y = c(0,1500)
   division_quadriculado_y = 5
   
   
-  ggplot(df,aes(X,value,color = series)) +
+  ggplot(df,aes(X,value,color = Type)) +
     theme_light(base_size = base_size,base_line_size = base_line_size) +
-    labs(title = bquote("Number of Objects at each Iteration"), 
+    labs(title = "", 
          x = bquote("Iterations"),y = bquote("Number of Objects"))+
     theme(plot.title = element_text(size=title_size),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
     scale_x_continuous(breaks = floor(seq(limits_x[1],limits_x[2],by=(limits_x[2]-limits_x[1])/division_quadriculado_x)),limits = c(limits_x[1]-0.05,limits_x[2]+0.05)) + 
@@ -135,11 +136,11 @@ hist_iterative_boolean_sim = function(tet,r0,a,iterative_point,pdf_name){
     scale_colour_manual(values=group.colors)+
     scale_linetype_manual(values=2)+
     scale_size_manual(values=2)+
-    geom_hline(yintercept=mean(vector_n_object)+3*sqrt(var(vector_n_object)), linetype="dashed", color = "orange")+
-    geom_hline(yintercept=mean(vector_n_object)-3*sqrt(var(vector_n_object)), linetype="dashed", color = "orange")+
-    geom_hline(yintercept=mean(vector_n_object), linetype="dashed", color = "blue")+
-    geom_hline(yintercept=n_object_limit, linetype="dashed", color = "black")+
-    geom_vline(xintercept = it_n_object_limit, linetype="solid", color = "black")
+    # geom_hline(yintercept=mean(vector_n_object)+3*sqrt(var(vector_n_object)), linetype="dashed", color = "orange")+
+    # geom_hline(yintercept=mean(vector_n_object)-3*sqrt(var(vector_n_object)), linetype="dashed", color = "orange")+
+    # geom_hline(yintercept=mean(vector_n_object), linetype="dashed", color = "blue")+
+    # geom_hline(yintercept=n_object_limit, linetype="dashed", color = "black")+
+    geom_vline(xintercept = it_n_object_limit, linetype="solid", color = "black")+theme(legend.position="bottom")
   ggsave(paste0(pdf_name,"_Nit.pdf"))
 }
 
@@ -497,29 +498,56 @@ plot_variogram_grid_boolean = function(vector_rep,csv_name,rectangle_range,a,tet
   dev.off()
   return("FIN")
 }
-
+q3gamma = function(p,a=a,r0=r0){
+  p_i = c(a^2*r0^2,2*a*r0,2) # probas du mélange
+  den = sum(p_i)
+  output = p_i[1]/den*qgamma(p,1,a)+p_i[2]/den*qgamma(p,2,a)+ p_i[3]/den*qgamma(p,3,a)
+  return(output)
+}
 #QQ PLOT
 qq_plot = function(tet,r0,a,radius,csv_name){
   map_prob_graph = "map_prob_graphs"
   Z <- radius      # random sample from exponential distribution
   p <- ppoints(100)    # 100 equally spaced points on (0,1), excluding endpoints
   q <- quantile(Z,p=p) # percentiles of the sample distribution
+  
   pdf(paste0(map_prob_graph,"/QQ_PLOT_",csv_name,".pdf"))
   par(pty="s")
-  plot(a^2*r0^2/den*qgamma(p,1,a)+
-         2*a*r0/den*qgamma(p,2,a)+
-         2/den*qgamma(p,3,a) ,q, main="",
+  plot(q3gamma(p=p,a=a,r0=r0) ,q, main="",
        xlab="Theoretical Quantiles",ylab="Sample Quantiles",ylim = c(0,1),xlim=c(0,1))
   abline(a = 0,b = 1,col = "blue",lty=2, lwd = 2)
-  
-  # plot(qexp(p = p,rate = a),q, main=paste0("QQ-PLOT ",csv_name),
-  #      xlab="Theoretical Quantiles",ylab="Sample Quantiles",ylim = c(0,1),xlim=c(0,1))
-  # abline(a = 0,b = 1,col = "blue",lty=2, lwd = 2)
-  
-  
   dev.off()
-
 }
+
+#QQ_plot to compare exponential vs melange 3 gamma at different domain sizes
+qq_plot_thesis_theoretical = function(tet,a){
+  map_prob_graph = "map_prob_graphs"
+  Z <- rexp(n = 1e6,rate = a)      # random sample from exponential distribution
+  p <- ppoints(100)    # 100 equally spaced points on (0,1), excluding endpoints
+  q <- quantile(Z,p=p) # percentiles of the sample distribution
+  r0_vector = c(0,0.5,5,5e10)
+  r0_legend = r0_vector[-length(r0_vector)]
+  r0_legend = c(r0_legend,"Infinity")
+  col = rg.colors(number = length(r0_vector),rank = 1)
+  # pdf(paste0(map_prob_graph,"/QQ_PLOT_",csv_name,".pdf"))
+  par(pty="s")
+  plot(NULL,NULL,xlab="Theoretical Quantiles",ylab="Sample Quantiles",ylim = c(0,2),xlim=c(0,2),main="")
+  for(r0 in 1:length(r0_vector)){
+    points(q3gamma(p = p,a = a,r0 = r0_vector[r0]),q, add = TRUE,col = col[r0],type = 'p',lwd = 2)
+  }
+  
+  
+  
+  legend("bottomright", legend=paste0("r0 = ",r0_legend),
+       col=col, lty=1, cex=1)
+  abline(a = 0,b = 1,col = "blue",lty=2, lwd = 2)
+  
+  
+  
+  # dev.off()
+  
+}
+
 
 plots_charging_the_data = function(){
   #iterative method

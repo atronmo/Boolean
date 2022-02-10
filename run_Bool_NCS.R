@@ -16,7 +16,7 @@ p_i = c(a^2*r0^2,2*a*r0,2)/den # probas du mélange
 
 cum_pi = cumsum(p_i) #distribution cumulée des probas du mélange
 #map_prob_NCS
-vector_rep = 1:3
+vector_rep = 1:500
 csv_name = "Bool_NCS"
 dir.create(csv_name)
 setwd(csv_name)

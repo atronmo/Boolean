@@ -10,7 +10,6 @@ rectangle_range = c(8,6)
 NCS_Boolean = TRUE
 vector_rep = 1:500
 
-
 NCS_Boolean_point_fixe = FALSE
 if(NCS_Boolean == TRUE){csv_name = ifelse(NCS_Boolean_point_fixe == TRUE,paste0("Bool_iterative_line_NCS"),"Bool_iterative_NCS_all_random")}
 if(NCS_Boolean == FALSE){csv_name = paste0("Bool_iterative_line")}
